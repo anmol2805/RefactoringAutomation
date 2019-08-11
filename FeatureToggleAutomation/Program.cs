@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.MSBuild;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace FeatureToggleAutomation
 {
     class Program
     {
+        private static readonly string solutionPath = @"";
+        private static readonly string featureToggle = @"";
         private static readonly string codeWithOnlyIfStatement = @"
 `       private static void SomeMethod()
         {
@@ -56,12 +59,33 @@ namespace FeatureToggleAutomation
         }";
         static void Main(string[] args)
         {
+            //SearchFeatureToggleKeywodInSolution(solutionPath,featureToggle);
 
-            RemoveToggleWithOnlyIfStatement(codeWithOnlyIfStatement);
-            RemoveToggleWithIfElseStatement(codeWithIfElseStatement);
-            RemoveToggleWithReturnStatement(codeWithReturnStatement);
+            //RemoveToggleWithOnlyIfStatement(codeWithOnlyIfStatement);
+
+            //RemoveToggleWithIfElseStatement(codeWithIfElseStatement);
+
+            //RemoveToggleWithReturnStatement(codeWithReturnStatement);
                        
             Console.ReadKey();
+        }
+
+        private static void SearchFeatureToggleKeywodInSolution(string solutionPath, string featureToggle)
+        {
+            var msWorkspace = MSBuildWorkspace.Create();
+
+            var solution = msWorkspace.OpenSolutionAsync(solutionPath).Result;
+            foreach (var project in solution.Projects)
+            {
+                foreach (var document in project.Documents)
+                {
+                    var syntaxRoot = document.GetSyntaxRootAsync();
+                    if (syntaxRoot.ToString().Contains(featureToggle)) {
+                        Console.WriteLine(project.Name + "\t\t\t" + document.FilePath);
+                    }
+                                        
+                }
+            }
         }
 
         private static void RemoveToggleWithReturnStatement(string codeWithReturnStatement)
@@ -134,6 +158,8 @@ namespace FeatureToggleAutomation
             }
 
         }
+
+
     }
 
     public class SyntaxWalker : CSharpSyntaxWalker
